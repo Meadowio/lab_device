@@ -387,6 +387,72 @@ void testReactorOutputLimitSingle() {
     cout << endl;
 }
 
+/**
+ * @test Test getIsDoubleOutput method (unit test for class function)
+ */
+void testReactorGetIsDoubleOutput() {
+    cout << "=== Test 5: getIsDoubleOutput method ===" << endl;
+
+    Reactor singleReactor(false);
+    Reactor doubleReactor(true);
+
+    if (!singleReactor.getIsDoubleOutput() && doubleReactor.getIsDoubleOutput()) {
+        cout << "PASS: getIsDoubleOutput method works correctly" << endl;
+    } else {
+        cout << "FAIL: getIsDoubleOutput method returns wrong values" << endl;
+    }
+}
+
+/**
+ * @test Test exception when no input stream
+ */
+void testReactorNoInputException() {
+    cout << "=== Test 6: Exception when no input ===" << endl;
+    streamcounter = 0;
+    Reactor reactor(false);
+
+    shared_ptr<Stream> output(new Stream(++streamcounter));
+    reactor.addOutput(output);
+
+    try {
+        reactor.updateOutputs();
+        cout << "FAIL: Should throw exception when no input" << endl;
+    } catch (const string& ex) {
+        if (ex == "Input stream not connected to reactor") {
+            cout << "PASS: Exception when no input works correctly" << endl;
+        } else {
+            cout << "FAIL: Wrong exception message" << endl;
+        }
+    }
+}
+
+/**
+ * @test Test exception when wrong output count
+ */
+void testReactorWrongOutputCount() {
+    cout << "=== Test 7: Exception when wrong output count ===" << endl;
+    streamcounter = 0;
+    Reactor reactor(true); // Double output mode
+
+    shared_ptr<Stream> input(new Stream(++streamcounter));
+    shared_ptr<Stream> output1(new Stream(++streamcounter));
+    // Don't add second output!
+
+    reactor.addInput(input);
+    reactor.addOutput(output1);
+
+    try {
+        reactor.updateOutputs();
+        cout << "FAIL: Should throw exception when wrong output count" << endl;
+    } catch (const string& ex) {
+        if (ex == "Output streams not properly set for reactor") {
+            cout << "PASS: Exception when wrong outputs works correctly" << endl;
+        } else {
+            cout << "FAIL: Wrong exception message" << endl;
+        }
+    }
+}
+
 void tests(){
     cout << "=== STARTING TESTS ===" << endl << endl;
 
@@ -399,6 +465,9 @@ void tests(){
     testReactorDoubleOutput();
     testReactorInputLimit();
     testReactorOutputLimitSingle();
+    testReactorGetIsDoubleOutput();
+    testReactorNoInputException();
+    testReactorWrongOutputCount();
 
     cout << endl << "=== TESTS COMPLETED ===" << endl;
 }
