@@ -251,8 +251,29 @@ public:
      */
     void updateOutputs() override
     {
-        // TODO: Реализовать логику массового баланса
-        cout << "Reactor: метод updateOutputs() пока не реализован" << endl;
+        // Проверка подключения входного потока
+        if (inputs.empty()) {
+            throw "Входной поток не подключен к реактору"s;
+        }
+
+        // Проверка установки выходных потоков
+        if (outputs.size() != outputAmount) {
+            throw "Выходные потоки не установлены для реактора"s;
+        }
+
+        double inputMass = inputs[0]->getMassFlow();
+
+        if (isDoubleOutput) {
+            // Делим массу поровну между двумя выходами
+            double outputMass = inputMass / 2.0;
+            outputs[0]->setMassFlow(outputMass);
+            outputs[1]->setMassFlow(outputMass);
+            cout << "Реактор: разделил массу " << inputMass << " на два выхода по " << outputMass << endl;
+        } else {
+            // Один выход - та же масса что и на входе
+            outputs[0]->setMassFlow(inputMass);
+            cout << "Реактор: передал массу " << inputMass << " на один выход" << endl;
+        }
     }
 
     /**
