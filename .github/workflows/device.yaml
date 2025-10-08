@@ -13,9 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: install
-      run: sudo apt install -y googletest
     - name: make
-      run: make
+      run: make test
     - name: execute
-      run: ./a.out
+      run: ./test_runner
