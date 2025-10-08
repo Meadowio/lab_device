@@ -283,82 +283,72 @@ public:
     bool getIsDoubleOutput() const { return isDoubleOutput; }
 };
 
-void testTooManyOutputStreams(){
-    streamcounter=0;
-    
-    Reactor dl = new Reactor(false);
-    
-    shared_ptr<Stream> s1(new Stream(++streamcounter));
-    shared_ptr<Stream> s2(new Stream(++streamcounter));
-    shared_ptr<Stream> s3(new Stream(++streamcounter));
-    s1->setMassFlow(10.0);
-    s2->setMassFlow(5.0);
-    dl.addInput(s1);
-    dl.addOutput(s2);
-    try{
-        dl.addOutput(s3);
-    } catch(const string ex){
-         if (ex == "OUTPUT STREAM LIMIT!")
-            cout << "Test 1 passed" << endl;
+/**
+ * @test Тест реактора в одноканальном режиме
+ */
+void testReactorSingleOutput() {
+    cout << "Тест 1: Реактор с одним выходом" << endl;
+    streamcounter = 0;
+    Reactor reactor(false); // Одноканальный режим
 
-        return;
+    shared_ptr<Stream> input(new Stream(++streamcounter));
+    shared_ptr<Stream> output(new Stream(++streamcounter));
+
+    input->setMassFlow(20.0);
+
+    reactor.addInput(input);
+    reactor.addOutput(output);
+    reactor.updateOutputs();
+
+    if (abs(output->getMassFlow() - 20.0) < POSSIBLE_ERROR) {
+        cout << "Тест пройден: одноканальный режим работает корректно" << endl;
+    } else {
+        cout << "Тест не пройден: неверная масса на выходе" << endl;
     }
-    
-     cout << "Test 1 failed" << endl;
+    cout << endl;
 }
 
-void testTooManyInputStreams(){
-    streamcounter=0;
-    
-    Reactor dl = new Reactor(false);
-    
-    shared_ptr<Stream> s1(new Stream(++streamcounter));
-    shared_ptr<Stream> s3(new Stream(++streamcounter));
-    s1->setMassFlow(10.0);
-    s2->setMassFlow(5.0);
-    dl.addInput(s1);
-    try{
-        dl.addInput(s3);
-    } catch(const string ex){
-         if (ex == "INPUT STREAM LIMIT!")
-            cout << "Test 2 passed" << endl;
+/**
+ * @test Тест реактора в двухканальном режиме
+ */
+void testReactorDoubleOutput() {
+    cout << "=== Тест 2: Реактор с двумя выходами ===" << endl;
+    streamcounter = 0;
+    Reactor reactor(true); // Двухканальный режим
 
-        return;
+    shared_ptr<Stream> input(new Stream(++streamcounter));
+    shared_ptr<Stream> output1(new Stream(++streamcounter));
+    shared_ptr<Stream> output2(new Stream(++streamcounter));
+
+    input->setMassFlow(30.0);
+
+    reactor.addInput(input);
+    reactor.addOutput(output1);
+    reactor.addOutput(output2);
+    reactor.updateOutputs();
+
+    double totalOutput = output1->getMassFlow() + output2->getMassFlow();
+    if (abs(totalOutput - 30.0) < POSSIBLE_ERROR &&
+        abs(output1->getMassFlow() - 15.0) < POSSIBLE_ERROR) {
+        cout << "Тест пройден: двухканальный режим работает корректно" << endl;
+    } else {
+        cout << "Тест не пройден: неверное распределение массы" << endl;
     }
-    
-     cout << "Test 2 failed"s << endl;
-}
-
-void testInputEqualOutput(){
-        streamcounter=0;
-    
-    Reactor dl = new Reactor(true);
-    
-    shared_ptr<Stream> s1(new Stream(++streamcounter));
-    shared_ptr<Stream> s2(new Stream(++streamcounter));
-    shared_ptr<Stream> s3(new Stream(++streamcounter));
-    s1->setMassFlow(10.0);
-    s2->setMassFlow(5.0);
-    dl.addInput(s1);
-    dl.addOutput(s2);
-    dl.addOutput(s3);
-    
-    dl.updateOutputs();
-    
-    if(dl.outputs.at(0).getMassFlow + dl.outputs.at(1).getMassFlow == dl.inputs.at(0).getMassFlow)
-        cout << "Test 3 passed" << endl;
-    else
-        cout << "Test 3 failed" << endl;
+    cout << endl;
 }
 
 void tests(){
-    testInputEqualOutput();
-    testTooManyOutputStreams();
-    testTooManyInputStreams();
-    
+
+    cout << "Начало теста" << endl << endl;
+
     shouldSetOutputsCorrectlyWithOneOutput();
     shouldCorrectOutputs();
     shouldCorrectInputs();
+
+    testReactorSingleOutput();
+    testReactorDoubleOutput();
+
+    cout << endl << "Конец теста" << endl;
 }
 
 /**
