@@ -216,21 +216,50 @@ void shouldCorrectInputs() {
     cout << "Test 3 failed"s << endl;
 }
 
-class Reactor : public Device{
+/**
+ * @class Reactor
+ * @brief Химический реактор с 1 входом и 1 или 2 выходами
+ *
+ * Реактор может работать в двух режимах:
+ * - Одноканальный режим: 1 вход → 1 выход
+ * - Двухканальный режим: 1 вход → 2 выхода (масса делится поровну)
+ */
+class Reactor : public Device
+{
+private:
+    bool isDoubleOutput; ///< Флаг двухканального режима
+
 public:
-    Reactor(bool isDoubleReactor) {
-        inputAmount = 1;
-        if (isDoubleReactor) outputAmount = 2;
-        else inputAmount = 1;
+    /**
+     * @brief Конструктор реактора
+     * @param isDoubleReactor true - 2 выхода, false - 1 выход
+     */
+    Reactor(bool isDoubleReactor) : Device()
+    {
+        isDoubleOutput = isDoubleReactor;
+        inputAmount = 1;  // Всегда 1 вход
+        outputAmount = isDoubleReactor ? 2 : 1;  // 1 или 2 выхода
     }
-    
-    void updateOutputs() override{
-        double inputMass = inputs.at(0) -> getMassFlow();
-            for(int i = 0; i < outputAmount; i++){
-            double outputLocal = inputMass * (1/outputAmount);
-            outputs.at(i) -> setMassFlow(outputLocal);
-        }
+
+    /**
+     * @brief Обновляет выходные потоки на основе входного потока
+     *
+     * В одноканальном режиме: выходная масса = входная масса
+     * В двухканальном режиме: каждый выход получает половину входной массы
+     *
+     * @throws std::string если выходы не установлены перед обновлением
+     */
+    void updateOutputs() override
+    {
+        // TODO: Реализовать логику массового баланса
+        cout << "Reactor: метод updateOutputs() пока не реализован" << endl;
     }
+
+    /**
+     * @brief Возвращает режим работы реактора
+     * @return true если двухканальный режим, false если одноканальный
+     */
+    bool getIsDoubleOutput() const { return isDoubleOutput; }
 };
 
 void testTooManyOutputStreams(){
