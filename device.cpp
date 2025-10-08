@@ -1,7 +1,6 @@
 /**
- * @file main.cpp
- *
- * @brief A C++ program demonstrating the usage of the Stream and Device classes.
+ * @file device.cpp
+ * @brief Chemical process simulation with Stream, Mixer and Reactor classes
  */
 
 #include <iostream>
@@ -81,16 +80,16 @@ public:
      * @param s A shared pointer to the input stream.
      */
     void addInput(shared_ptr<Stream> s){
-      if(inputs.size() < inputAmount) inputs.push_back(s);
-      else throw"INPUT STREAM LIMIT!";
+        if(inputs.size() < inputAmount) inputs.push_back(s);
+        else throw"INPUT STREAM LIMIT!";
     }
     /**
      * @brief Add an output stream to the device.
      * @param s A shared pointer to the output stream.
      */
     void addOutput(shared_ptr<Stream> s){
-      if(outputs.size() < outputAmount) outputs.push_back(s);
-      else throw "OUTPUT STREAM LIMIT!";
+        if(outputs.size() < outputAmount) outputs.push_back(s);
+        else throw "OUTPUT STREAM LIMIT!";
     }
 
     /**
@@ -101,46 +100,46 @@ public:
 
 class Mixer: public Device
 {
-    private:
-      int _inputs_count = 0;
-    public:
-      Mixer(int inputs_count): Device() {
+private:
+    int _inputs_count = 0;
+public:
+    Mixer(int inputs_count): Device() {
         _inputs_count = inputs_count;
-      }
-      void addInput(shared_ptr<Stream> s) {
+    }
+    void addInput(shared_ptr<Stream> s) {
         if (inputs.size() == _inputs_count) {
-          throw "Too much inputs"s;
+            throw "Too much inputs"s;
         }
         inputs.push_back(s);
-      }
-      void addOutput(shared_ptr<Stream> s) {
+    }
+    void addOutput(shared_ptr<Stream> s) {
         if (outputs.size() == MIXER_OUTPUTS) {
-          throw "Too much outputs"s;
+            throw "Too much outputs"s;
         }
         outputs.push_back(s);
-      }
-      void updateOutputs() override {
+    }
+    void updateOutputs() override {
         double sum_mass_flow = 0;
         for (const auto& input_stream : inputs) {
-          sum_mass_flow += input_stream -> getMassFlow();
+            sum_mass_flow += input_stream -> getMassFlow();
         }
 
         if (outputs.empty()) {
-          throw "Should set outputs before update"s;
+            throw "Should set outputs before update"s;
         }
 
-        double output_mass = sum_mass_flow / outputs.size(); // divide 0
+        double output_mass = sum_mass_flow / outputs.size();
 
         for (auto& output_stream : outputs) {
-          output_stream -> setMassFlow(output_mass);
+            output_stream -> setMassFlow(output_mass);
         }
-      }
+    }
 };
 
 void shouldSetOutputsCorrectlyWithOneOutput() {
     streamcounter=0;
     Mixer d1 = Mixer(2);
-    
+
     shared_ptr<Stream> s1(new Stream(++streamcounter));
     shared_ptr<Stream> s2(new Stream(++streamcounter));
     shared_ptr<Stream> s3(new Stream(++streamcounter));
@@ -154,16 +153,16 @@ void shouldSetOutputsCorrectlyWithOneOutput() {
     d1.updateOutputs();
 
     if (abs(s3->getMassFlow()) - 15 < POSSIBLE_ERROR) {
-      cout << "Test 1 passed"s << endl;
+        cout << "Test 1 passed"s << endl;
     } else {
-      cout << "Test 1 failed"s << endl;
+        cout << "Test 1 failed"s << endl;
     }
 }
 
 void shouldCorrectOutputs() {
     streamcounter=0;
     Mixer d1 = Mixer(2);
-    
+
     shared_ptr<Stream> s1(new Stream(++streamcounter));
     shared_ptr<Stream> s2(new Stream(++streamcounter));
     shared_ptr<Stream> s3(new Stream(++streamcounter));
@@ -176,13 +175,12 @@ void shouldCorrectOutputs() {
     d1.addOutput(s3);
 
     try {
-      d1.addOutput(s4);
+        d1.addOutput(s4);
     } catch (const string ex) {
-      if (ex == "Too much outputs"s) {
-        cout << "Test 2 passed"s << endl;
-
-        return;
-      }
+        if (ex == "Too much outputs"s) {
+            cout << "Test 2 passed"s << endl;
+            return;
+        }
     }
 
     cout << "Test 2 failed"s << endl;
@@ -191,7 +189,7 @@ void shouldCorrectOutputs() {
 void shouldCorrectInputs() {
     streamcounter=0;
     Mixer d1 = Mixer(2);
-    
+
     shared_ptr<Stream> s1(new Stream(++streamcounter));
     shared_ptr<Stream> s2(new Stream(++streamcounter));
     shared_ptr<Stream> s3(new Stream(++streamcounter));
@@ -204,13 +202,12 @@ void shouldCorrectInputs() {
     d1.addOutput(s3);
 
     try {
-      d1.addInput(s4);
+        d1.addInput(s4);
     } catch (const string ex) {
-      if (ex == "Too much inputs"s) {
-        cout << "Test 3 passed"s << endl;
-
-        return;
-      }
+        if (ex == "Too much inputs"s) {
+            cout << "Test 3 passed"s << endl;
+            return;
+        }
     }
 
     cout << "Test 3 failed"s << endl;
@@ -218,78 +215,78 @@ void shouldCorrectInputs() {
 
 /**
  * @class Reactor
- * @brief Химический реактор с 1 входом и 1 или 2 выходами
+ * @brief Chemical reactor with 1 input and 1 or 2 outputs
  *
- * Реактор может работать в двух режимах:
- * - Одноканальный режим: 1 вход → 1 выход
- * - Двухканальный режим: 1 вход → 2 выхода (масса делится поровну)
+ * Reactor can operate in two modes:
+ * - Single output mode: 1 input → 1 output
+ * - Double output mode: 1 input → 2 outputs (mass split equally)
  */
 class Reactor : public Device
 {
 private:
-    bool isDoubleOutput; ///< Флаг двухканального режима
+    bool isDoubleOutput; ///< Flag for double output mode
 
 public:
     /**
-     * @brief Конструктор реактора
-     * @param isDoubleReactor true - 2 выхода, false - 1 выход
+     * @brief Constructor for Reactor device
+     * @param isDoubleReactor true - 2 outputs, false - 1 output
      */
     Reactor(bool isDoubleReactor) : Device()
     {
         isDoubleOutput = isDoubleReactor;
-        inputAmount = 1;  // Всегда 1 вход
-        outputAmount = isDoubleReactor ? 2 : 1;  // 1 или 2 выхода
+        inputAmount = 1;  // Always 1 input
+        outputAmount = isDoubleReactor ? 2 : 1;  // 1 or 2 outputs
     }
 
     /**
-     * @brief Обновляет выходные потоки на основе входного потока
+     * @brief Updates output streams based on input stream and reactor configuration
      *
-     * В одноканальном режиме: выходная масса = входная масса
-     * В двухканальном режиме: каждый выход получает половину входной массы
+     * In single output mode: output mass flow = input mass flow
+     * In double output mode: each output gets half of input mass flow
      *
-     * @throws std::string если выходы не установлены перед обновлением
+     * @throws std::string if outputs are not set before update
      */
     void updateOutputs() override
     {
-        // Проверка подключения входного потока
+        // Check if input is connected
         if (inputs.empty()) {
-            throw "Входной поток не подключен к реактору"s;
+            throw "Input stream not connected to reactor"s;
         }
 
-        // Проверка установки выходных потоков
+        // Check if outputs are set
         if (outputs.size() != outputAmount) {
-            throw "Выходные потоки не установлены для реактора"s;
+            throw "Output streams not properly set for reactor"s;
         }
 
         double inputMass = inputs[0]->getMassFlow();
 
         if (isDoubleOutput) {
-            // Делим массу поровну между двумя выходами
+            // Split mass equally between two outputs
             double outputMass = inputMass / 2.0;
             outputs[0]->setMassFlow(outputMass);
             outputs[1]->setMassFlow(outputMass);
-            cout << "Реактор: разделил массу " << inputMass << " на два выхода по " << outputMass << endl;
+            cout << "Reactor: split mass " << inputMass << " into two outputs of " << outputMass << endl;
         } else {
-            // Один выход - та же масса что и на входе
+            // Single output - same mass flow as input
             outputs[0]->setMassFlow(inputMass);
-            cout << "Реактор: передал массу " << inputMass << " на один выход" << endl;
+            cout << "Reactor: transferred mass " << inputMass << " to single output" << endl;
         }
     }
 
     /**
-     * @brief Возвращает режим работы реактора
-     * @return true если двухканальный режим, false если одноканальный
+     * @brief Gets the reactor operation mode
+     * @return true if reactor is in double output mode, false if single output
      */
     bool getIsDoubleOutput() const { return isDoubleOutput; }
 };
 
 /**
- * @test Тест реактора в одноканальном режиме
+ * @test Test reactor in single output mode
  */
 void testReactorSingleOutput() {
-    cout << "Тест 1: Реактор с одним выходом" << endl;
+    cout << "=== Test 1: Reactor with single output ===" << endl;
     streamcounter = 0;
-    Reactor reactor(false); // Одноканальный режим
+    Reactor reactor(false); // Single output mode
 
     shared_ptr<Stream> input(new Stream(++streamcounter));
     shared_ptr<Stream> output(new Stream(++streamcounter));
@@ -301,20 +298,20 @@ void testReactorSingleOutput() {
     reactor.updateOutputs();
 
     if (abs(output->getMassFlow() - 20.0) < POSSIBLE_ERROR) {
-        cout << "Тест пройден: одноканальный режим работает корректно" << endl;
+        cout << "PASS: Single output mode works correctly" << endl;
     } else {
-        cout << "Тест не пройден: неверная масса на выходе" << endl;
+        cout << "FAIL: Incorrect output mass" << endl;
     }
     cout << endl;
 }
 
 /**
- * @test Тест реактора в двухканальном режиме
+ * @test Test reactor in double output mode
  */
 void testReactorDoubleOutput() {
-    cout << "=== Тест 2: Реактор с двумя выходами ===" << endl;
+    cout << "=== Test 2: Reactor with double output ===" << endl;
     streamcounter = 0;
-    Reactor reactor(true); // Двухканальный режим
+    Reactor reactor(true); // Double output mode
 
     shared_ptr<Stream> input(new Stream(++streamcounter));
     shared_ptr<Stream> output1(new Stream(++streamcounter));
@@ -330,16 +327,69 @@ void testReactorDoubleOutput() {
     double totalOutput = output1->getMassFlow() + output2->getMassFlow();
     if (abs(totalOutput - 30.0) < POSSIBLE_ERROR &&
         abs(output1->getMassFlow() - 15.0) < POSSIBLE_ERROR) {
-        cout << "Тест пройден: двухканальный режим работает корректно" << endl;
+        cout << "PASS: Double output mode works correctly" << endl;
     } else {
-        cout << "Тест не пройден: неверное распределение массы" << endl;
+        cout << "FAIL: Incorrect mass distribution" << endl;
+    }
+    cout << endl;
+}
+
+/**
+ * @test Test reactor input limit
+ */
+void testReactorInputLimit() {
+    cout << "=== Test 3: Reactor input limit ===" << endl;
+    streamcounter = 0;
+    Reactor reactor(false);
+
+    shared_ptr<Stream> input1(new Stream(++streamcounter));
+    shared_ptr<Stream> input2(new Stream(++streamcounter));
+    shared_ptr<Stream> output(new Stream(++streamcounter));
+
+    reactor.addInput(input1);
+    try {
+        reactor.addInput(input2);
+        cout << "FAIL: Should not allow more than 1 input" << endl;
+    } catch (const char* ex) {
+        if (string(ex) == "INPUT STREAM LIMIT!") {
+            cout << "PASS: Input limit enforced correctly" << endl;
+        } else {
+            cout << "FAIL: Wrong exception message" << endl;
+        }
+    }
+    cout << endl;
+}
+
+/**
+ * @test Test reactor output limit in single mode
+ */
+void testReactorOutputLimitSingle() {
+    cout << "=== Test 4: Reactor output limit (single mode) ===" << endl;
+    streamcounter = 0;
+    Reactor reactor(false);
+
+    shared_ptr<Stream> input(new Stream(++streamcounter));
+    shared_ptr<Stream> output1(new Stream(++streamcounter));
+    shared_ptr<Stream> output2(new Stream(++streamcounter));
+
+    reactor.addInput(input);
+    reactor.addOutput(output1);
+    try {
+        reactor.addOutput(output2);
+        cout << "FAIL: Should not allow more than 1 output in single mode" << endl;
+    } catch (const char* ex) {
+        if (string(ex) == "OUTPUT STREAM LIMIT!") {
+            cout << "PASS: Output limit enforced correctly" << endl;
+        } else {
+            cout << "FAIL: Wrong exception message" << endl;
+        }
     }
     cout << endl;
 }
 
 void tests(){
+    cout << "=== STARTING TESTS ===" << endl << endl;
 
-    cout << "Начало теста" << endl << endl;
 
     shouldSetOutputsCorrectlyWithOneOutput();
     shouldCorrectOutputs();
@@ -347,8 +397,10 @@ void tests(){
 
     testReactorSingleOutput();
     testReactorDoubleOutput();
+    testReactorInputLimit();
+    testReactorOutputLimitSingle();
 
-    cout << endl << "Конец теста" << endl;
+    cout << endl << "=== TESTS COMPLETED ===" << endl;
 }
 
 /**
@@ -357,30 +409,10 @@ void tests(){
  */
 int main()
 {
+    cout << "Chemical Process Simulation Started" << endl;
+    cout << "====================================" << endl;
+
     streamcounter = 0;
-
-    // Create streams
-    shared_ptr<Stream> s1(new Stream(++streamcounter));
-    shared_ptr<Stream> s2(new Stream(++streamcounter));
-    shared_ptr<Stream> s3(new Stream(++streamcounter));
-
-    // Set mass flows
-    s1->setMassFlow(10.0);
-    s2->setMassFlow(5.0);
-
-    // Create a device (e.g., Mixer) and add input/output streams
-    // Mixer d1;
-    // d1.addInput(s1);
-    // d1.addInput(s2);
-    // d1.addOutput(s3);
-
-    // Update the outputs of the device
-    // d1.updateOutputs();
-
-    // Print stream information
-//    s1->print();
-//    s2->print();
-//    s3->print();
     tests();
 
     return 0;
